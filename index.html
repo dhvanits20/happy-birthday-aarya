@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#100520">
+
+<!-- WhatsApp & Social Link Preview -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Happy Birthday Aarya! 🎂✨">
+<meta property="og:description" content="A special celebration & birthday video created just for you 🌸 Tap to play with music!">
+<meta property="og:image" content="keep.jpg">
+
+<title>Happy Birthday Aarya 🎂✨</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Dancing+Script:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #f5c842;
+    --rose: #f28bbf;
+    --deep: #100520;
+    --purple: #2d0a4e;
+    --lavender: #ce93d8;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    background: var(--deep);
+    font-family: 'Poppins', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  /* ─── CANVAS BACKGROUND ─── */
+  #bg-canvas {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  }
+
+  /* ─── INTRO SCREEN ─── */
+  #intro {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 50% 60%, #2d0a4e 0%, #080010 100%);
+    transition: opacity 1.2s ease, transform 1.2s ease;
+    padding: max(1.5rem, var(--safe-top)) 1.5rem max(1.5rem, var(--safe-bot));
+    text-align: center;
+  }
+  #intro.fade-out { opacity: 0; transform: scale(1.04); pointer-events: none; }
+
+  .intro-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(2.6rem, 10vw, 5.5rem);
+    color: var(--gold);
+    text-shadow: 0 0 35px rgba(245,200,66,.8), 0 0 70px rgba(245,200,66,.4);
+    animation: pulse-glow 2s ease-in-out infinite;
+    line-height: 1.15;
+  }
+  .intro-sub {
+    font-size: clamp(.85rem, 3vw, 1.25rem); color: var(--lavender);
+    margin-top: .6rem; letter-spacing: .25em; text-transform: uppercase;
+    opacity: 0; animation: fade-up 1s .6s forwards;
+  }
+  .hearts-row {
+    display: flex; gap: .8rem; margin-bottom: 1.2rem;
+    opacity: 0; animation: fade-up 1s .3s forwards;
+  }
+  .heart-icon { font-size: 2rem; animation: bounce-heart 1.5s ease-in-out infinite; }
+  .heart-icon:nth-child(2){ animation-delay:.2s; }
+  .heart-icon:nth-child(3){ animation-delay:.4s; }
+
+  .song-badge {
+    display: inline-flex; align-items: center; gap: .45rem;
+    background: rgba(245,200,66,.12); border: 1px solid rgba(245,200,66,.35);
+    border-radius: 50px; padding: .45rem 1.1rem;
+    font-size: clamp(.72rem, 2.5vw, .84rem); color: var(--gold); letter-spacing: .05em;
+    margin: 1.2rem 0 0; opacity: 0; animation: fade-up 1s .9s forwards;
+    max-width: 90vw;
+  }
+  .note-spin { display:inline-block; animation: spin-note 2s linear infinite; }
+
+  .intro-btn {
+    margin-top: 1.8rem; padding: .85rem 2.4rem;
+    background: linear-gradient(135deg, var(--gold), #e8a020);
+    border: none; border-radius: 50px;
+    font-family: 'Poppins',sans-serif; font-size: clamp(.95rem, 3.5vw, 1.1rem); font-weight: 600;
+    color: #1a0a2e; cursor: pointer;
+    opacity: 0; animation: fade-up 1s 1.2s forwards;
+    box-shadow: 0 8px 30px rgba(245,200,66,.5);
+    transition: transform .2s, box-shadow .2s;
+    touch-action: manipulation;
+  }
+  .intro-btn:active { transform: scale(0.96); }
+
+  /* ─── LYRICS OVERLAY (shown during slideshow) ─── */
+  #lyrics-overlay {
+    position: fixed;
+    top: max(1rem, calc(var(--safe-top) + 0.6rem));
+    left: 50%; transform: translateX(-50%);
+    z-index: 55; text-align: center; pointer-events: none;
+    width: 92vw; max-width: 600px;
+  }
+  .lyric-line {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(1.15rem, 4.5vw, 1.75rem);
+    color: white;
+    text-shadow: 0 2px 14px rgba(0,0,0,1), 0 0 20px rgba(245,200,66,.6);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .35s ease, transform .35s ease;
+    min-height: 2.2rem;
+    line-height: 1.3;
+  }
+  .lyric-line.active { opacity: 1; transform: translateY(0); }
+
+  /* ─── SLIDESHOW ─── */
+  #slideshow {
+    position: fixed; inset: 0; z-index: 10;
+    overflow: hidden;
+    opacity: 0; pointer-events: none; transition: opacity 1s ease;
+    touch-action: manipulation;
+  }
+  #slideshow.active { opacity: 1; pointer-events: all; }
+
+  /* ── CINEMATIC DISSOLVE SLIDE ── */
+  .slide {
+    position: absolute; inset: 0;
+    width: 100%; height: 100dvh;
+    opacity: 0;
+    transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    will-change: opacity;
+  }
+  .slide.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .slide.active .photo-main {
+    animation: ken-burns var(--hold-dur, 5.7s) ease-out forwards;
+  }
+  .slide.active .photo-caption {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── FULL-SCREEN PHOTO WITH AMBIENT BLUR ── */
+  .photo-wrap {
+    position: absolute; inset: 0;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Blurred background — fills any empty screen space on phones/tablets */
+  .photo-bg {
+    position: absolute; inset: -25px;
+    width: calc(100% + 50px); height: calc(100% + 50px);
+    object-fit: cover;
+    filter: blur(26px) brightness(0.35) saturate(1.4);
+    transform: scale(1.08);
+    pointer-events: none;
+  }
+
+  /* Main photo — auto scales to phone view size without clipping */
+  .photo-main {
+    position: relative; z-index: 1;
+    max-width: 96vw;
+    max-height: calc(100dvh - 130px);
+    width: auto; height: auto;
+    object-fit: contain;
+    display: block;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+    border-radius: 8px;
+  }
+
+  /* Gradient overlays — readability for lyrics & caption */
+  .photo-overlay {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(to top, rgba(8,0,18,.92) 0%, transparent 40%),
+      linear-gradient(to bottom, rgba(8,0,18,.6) 0%, transparent 28%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Caption — bottom center */
+  .photo-caption {
+    position: absolute;
+    bottom: max(3.8rem, calc(var(--safe-bot) + 3.2rem));
+    left: 1rem; right: 1rem;
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(1.2rem, 4.6vw, 2.1rem);
+    color: white;
+    text-shadow: 0 2px 16px rgba(0,0,0,1), 0 0 24px rgba(245,200,66,.6);
+    text-align: center;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity .7s .3s ease, transform .7s .3s ease;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  /* Slide counter — bottom right */
+  .slide-counter {
+    position: absolute;
+    bottom: max(1.1rem, calc(var(--safe-bot) + 0.8rem));
+    right: 1.2rem;
+    font-size: clamp(.65rem, 2.4vw, .75rem);
+    color: rgba(255,255,255,.5);
+    letter-spacing: .15em; font-family: 'Poppins', sans-serif;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  /* Thin gold letterbox accent lines */
+  .letterbox-top, .letterbox-bot {
+    position: absolute; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(245,200,66,.6), transparent);
+    pointer-events: none; z-index: 2;
+  }
+  .letterbox-top { top: 0; }
+  .letterbox-bot { bottom: 0; }
+
+  /* ─── PROGRESS BAR ─── */
+  #progress-bar-wrap {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 3px; background: rgba(255,255,255,.08); z-index: 50;
+  }
+  #progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--rose), var(--gold));
+    width: 0%; box-shadow: 0 0 8px rgba(245,200,66,.8);
+  }
+
+  /* ─── FINAL MESSAGE SCREEN (100% Phone Fitted) ─── */
+  #final-screen {
+    position: fixed; inset: 0; z-index: 90;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at center, #2d0a4e 0%, #0d0014 100%);
+    opacity: 0; pointer-events: none;
+    transition: opacity 1.5s ease;
+    padding: max(0.8rem, var(--safe-top)) 1rem max(1rem, var(--safe-bot));
+    text-align: center;
+    box-sizing: border-box;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #final-screen.active { opacity: 1; pointer-events: all; }
+
+  .final-container {
+    margin: auto;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 100%; max-width: 580px;
+    box-sizing: border-box;
+  }
+
+  .final-name {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(2rem, 5vh, 3.2rem);
+    background: linear-gradient(135deg, var(--gold), var(--rose), var(--lavender));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    animation: pulse-glow 2s infinite, fade-up 1s .2s both;
+    line-height: 1.25;
+    padding-top: 0.15rem;
+  }
+  .final-subtitle {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    font-size: clamp(0.72rem, 1.8vh, 0.95rem); color: var(--lavender);
+    margin: 0.1rem 0 0.45rem; animation: fade-up 1s .5s both;
+  }
+  .final-message {
+    width: 100%; max-width: 540px;
+    font-size: clamp(0.72rem, 1.55vh, 0.88rem); color: rgba(255,255,255,.92);
+    line-height: 1.45; animation: fade-up 1s .8s both;
+    background: rgba(255,255,255,.05); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(245,200,66,.2); border-radius: 14px;
+    padding: clamp(0.65rem, 1.6vh, 0.95rem) clamp(0.85rem, 2.5vw, 1.4rem);
+    text-align: left; position: relative;
+    box-sizing: border-box;
+  }
+  .final-message::before {
+    content: '"'; position: absolute; top: -.4rem; left: .8rem;
+    font-family: 'Playfair Display', serif; font-size: 2.4rem;
+    color: var(--gold); opacity: .25; line-height: 1;
+  }
+  .final-message p + p { margin-top: clamp(0.28rem, 0.65vh, 0.45rem); }
+  .signature {
+    margin-top: clamp(0.35rem, 0.8vh, 0.6rem);
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(0.95rem, 2.2vh, 1.35rem); color: var(--gold);
+    animation: fade-up 1s 1.1s both;
+  }
+  .final-emojis {
+    font-size: clamp(1.1rem, 2vh, 1.35rem);
+    margin-top: clamp(0.15rem, 0.4vh, 0.35rem);
+    animation: fade-up 1s 1.4s both; display: flex; gap: .5rem;
+  }
+  .final-emojis span { animation: bounce-heart 1.5s ease-in-out infinite; }
+  .final-emojis span:nth-child(2){ animation-delay:.3s; }
+  .final-emojis span:nth-child(3){ animation-delay:.6s; }
+
+  .replay-btn {
+    margin-top: clamp(0.4rem, 0.9vh, 0.7rem);
+    padding: clamp(0.35rem, 0.7vh, 0.48rem) 1.8rem;
+    background: linear-gradient(135deg,var(--rose),#c2185b);
+    border: none; border-radius: 50px;
+    font-family: 'Poppins',sans-serif; font-size: clamp(0.75rem, 1.3vh, 0.86rem); font-weight: 600;
+    color: white; cursor: pointer;
+    animation: fade-up 1s 1.6s both;
+    box-shadow: 0 6px 20px rgba(242,139,191,.5); transition: transform .2s, box-shadow .2s;
+    touch-action: manipulation;
+  }
+  .replay-btn:active { transform: scale(0.96); }
+
+  /* ─── PETALS ─── */
+  .petal {
+    position: fixed; pointer-events: none; z-index: 5; animation: fall linear forwards;
+  }
+
+  /* ─── KEYFRAMES ─── */
+  @keyframes pulse-glow {
+    0%,100%{ text-shadow:0 0 20px rgba(245,200,66,.8),0 0 60px rgba(245,200,66,.4); }
+    50%    { text-shadow:0 0 40px rgba(245,200,66,1),0 0 100px rgba(245,200,66,.6),0 0 140px rgba(242,139,191,.3); }
+  }
+  @keyframes fade-up {
+    from{ opacity:0; transform:translateY(24px); }
+    to  { opacity:1; transform:translateY(0); }
+  }
+  @keyframes bounce-heart {
+    0%,100%{ transform:translateY(0) scale(1); }
+    50%    { transform:translateY(-8px) scale(1.18); }
+  }
+  @keyframes ken-burns {
+    0%   { transform: scale(1); }
+    100% { transform: scale(1.045); }
+  }
+  @keyframes fall {
+    0%  { transform:translateY(-8vh) translateX(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(108vh) translateX(50px) rotate(600deg); opacity:.2; }
+  }
+  @keyframes spin-note {
+    0%  { transform:rotate(0deg); }
+    100%{ transform:rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- ═══ AUDIO TRACK ═══ -->
+<audio id="bg-audio" preload="auto" playsinline>
+  <source src="song.mp3" type="audio/mpeg">
+</audio>
+
+<!-- ═══ INTRO SCREEN ═══ -->
+<div id="intro">
+  <div class="hearts-row">
+    <span class="heart-icon">🌸</span>
+    <span class="heart-icon">💛</span>
+    <span class="heart-icon">🌸</span>
+  </div>
+  <div class="intro-title">Happy Birthday<br>Aarya! 🎂</div>
+  <div class="intro-sub">A special celebration just for you</div>
+  <div class="song-badge">
+    <span class="note-spin">🎵</span>
+    Original Birthday Song &mdash; <em>Friends to Family</em>
+  </div>
+  <button class="intro-btn" onclick="startShow()">▶ &nbsp;Play My Birthday Video</button>
+</div>
+
+<!-- ═══ LYRICS OVERLAY ═══ -->
+<div id="lyrics-overlay">
+  <div class="lyric-line" id="lyric-display"></div>
+</div>
+
+<!-- ═══ SLIDESHOW ═══ -->
+<div id="slideshow">
+  <div id="slides-container"></div>
+</div>
+
+<!-- ═══ FINAL MESSAGE ═══ -->
+<div id="final-screen">
+  <div class="final-container">
+    <div class="final-name">Aarya ✨</div>
+    <div class="final-subtitle">From strangers to family — a bond no one could plan</div>
+    <div class="final-message">
+      <p>You walked into my life as a friend, but somewhere along the way you became something far more precious — my sister. Not by blood, but by every laugh we shared, every secret we kept, and every moment that became a lifelong memory.</p>
+      <p>Watching you grow into the incredible woman you are today fills my heart with pride. Your laughter is contagious, your spirit is unstoppable, and your heart is pure gold. The day you tied that rakhi on my wrist was the day I became the luckiest brother in the world. 🌸</p>
+      <p>May every dream you hold find its way to you, and may every day ahead shine as bright as you do. Happy Birthday, Aarya — my sister, my family, always. 🌟</p>
+    </div>
+    <div class="signature">Your brother, always &nbsp;💛</div>
+    <div class="final-emojis">
+      <span>🎂</span><span>🌸</span><span>✨</span>
+    </div>
+    <button class="replay-btn" onclick="replay()">🔄 &nbsp; Watch Again</button>
+  </div>
+</div>
+
+<!-- Progress bar -->
+<div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  PHOTOS
+// ════════════════════════════════════════════════════════
+const photos = [
+  { file:"keep.jpg",      caption:"Always stunning ✨" },
+  { file:"keep (2).jpg",  caption:"Beautiful soul 🌸" },
+  { file:"keep (3).jpg",  caption:"Radiant as always 💫" },
+  { file:"keep (4).jpg",  caption:"Joy is her superpower 🌟" },
+  { file:"keep (5).jpg",  caption:"Memories to treasure 💖" },
+  { file:"keep (6).jpg",  caption:"Special moments 🌸" },
+  { file:"keep (7).jpg",  caption:"Timeless beauty ✨" },
+  { file:"keep (8).jpg",  caption:"Queen energy 👑" },
+  { file:"keep (9).jpg",  caption:"August sunshine 🌻" },
+  { file:"keep (10).jpg", caption:"Golden girl 💛" },
+  { file:"keep (11).jpg", caption:"Glowing, as always 🌟" },
+  { file:"keep (12).jpg", caption:"Sparkling soul 💜" },
+  { file:"keep (13).jpg", caption:"One of a kind 🌸" },
+  { file:"keep (14).jpg", caption:"More amazing every day 💖" },
+  { file:"keep (15).jpg", caption:"Every photo tells a story 🌸" },
+  { file:"keep (16).jpg", caption:"Capturing memories 📸" },
+  { file:"keep (17).jpg", caption:"Simply beautiful 🌹" },
+  { file:"keep (18).jpg", caption:"She shines wherever she goes ⭐" },
+  { file:"keep (19).jpg", caption:"Effortless grace 💛" },
+  { file:"keep (20).jpg", caption:"November glow 🍂" },
+  { file:"keep (21).jpg", caption:"🎂 Happy Birthday, Aarya! 🎂" },
+];
+
+// ════════════════════════════════════════════════════════
+//  SYNCHRONIZED LYRICS
+// ════════════════════════════════════════════════════════
+const lyrics = [
+  { text:"🎵  Friends to Family  🎵",                              time:0 },
+  { text:"We started as strangers, two worlds apart",             time:13000 },
+  { text:"But somehow, you found a home in my heart",             time:17500 },
+  { text:"Through laughter and memories, through seasons gone by",time:22000 },
+  { text:"You became my sister — I never knew why",               time:26500 },
+  { text:"— ✨ —",                                                time:32000 },
+  { text:"From friends to family, a bond no one planned",         time:36000 },
+  { text:"You reached out your heart, and I held your hand",      time:43000 },
+  { text:"More than a friend, you're my sister, my own",          time:50000 },
+  { text:"From the day that we met, I was no longer alone",       time:58000 },
+  { text:"— 🌸 —",                                               time:66000 },
+  { text:"You tied that thread of rakhi, so gentle, so true",     time:70000 },
+  { text:"No blood between us — but a bond born anew",            time:75000 },
+  { text:"In you I found someone to call my own",                 time:80000 },
+  { text:"A sister by choice — the best I have known",            time:85000 },
+  { text:"— 💛 —",                                               time:92000 },
+  { text:"From friends to family, a bond no one planned",         time:96000 },
+  { text:"More than a friend, you're my sister, my own",          time:104000 },
+  { text:"— 🎂 —",                                               time:114000 },
+  { text:"Happy Birthday, Aarya, today is your day",              time:118000 },
+  { text:"May every dream find you along the way",                time:125000 },
+  { text:"From your brother who loves you with all of his heart", time:131000 },
+  { text:"We were family from the very start  🎂",               time:137000 },
+  { text:"🎉  Happy Birthday, Aarya!  🎉",                       time:143000 },
+  { text:"",                                                       time:151000 },
+];
+
+let currentLyricIdx = -1;
+
+function getAudio() {
+  return document.getElementById('bg-audio');
+}
+
+function updateLyrics(timeMs) {
+  const el = document.getElementById('lyric-display');
+  if (!el) return;
+  let idx = -1;
+  for (let i = 0; i < lyrics.length; i++) {
+    if (lyrics[i].time <= timeMs) idx = i;
+    else break;
+  }
+  if (idx !== currentLyricIdx) {
+    currentLyricIdx = idx;
+    if (idx >= 0 && lyrics[idx].text) {
+      el.classList.remove('active');
+      setTimeout(() => {
+        el.textContent = lyrics[idx].text;
+        el.classList.add('active');
+      }, 140);
+    } else {
+      el.classList.remove('active');
+    }
+  }
+}
+
+const bgAudioEl = document.getElementById('bg-audio');
+if (bgAudioEl) {
+  bgAudioEl.addEventListener('timeupdate', () => {
+    updateLyrics(bgAudioEl.currentTime * 1000);
+  });
+}
+
+// ════════════════════════════════════════════════════════
+//  SLIDESHOW ENGINE
+// ════════════════════════════════════════════════════════
+const SLIDE_DURATION = 5700; // ms per slide
+let currentSlide = 0;
+let totalSlides = photos.length;
+let isPaused = false;
+let slideTimer = null;
+
+function buildSlides() {
+  const container = document.getElementById('slides-container');
+  container.innerHTML = '';
+  photos.forEach((p, i) => {
+    const slide = document.createElement('div');
+    slide.className = 'slide';
+    slide.id = `slide-${i}`;
+    slide.style.setProperty('--hold-dur', SLIDE_DURATION + 'ms');
+    slide.innerHTML = `
+      <div class="photo-wrap">
+        <img class="photo-bg" src="${p.file}" alt="" aria-hidden="true" onerror="this.style.display='none'">
+        <img class="photo-main" src="${p.file}" alt="Aarya" loading="eager"
+             onerror="this.closest('.slide').style.display='none'; nextSlide();">
+        <div class="photo-overlay"></div>
+        <div class="photo-caption">${p.caption}</div>
+        <div class="letterbox-top"></div>
+        <div class="letterbox-bot"></div>
+      </div>
+      <div class="slide-counter">${i + 1} / ${totalSlides}</div>`;
+    container.appendChild(slide);
+  });
+}
+
+function showSlide(index) {
+  if (index >= totalSlides) {
+    clearTimeout(slideTimer);
+    document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+    document.getElementById('slideshow').classList.remove('active');
+    document.getElementById('final-screen').classList.add('active');
+    document.getElementById('lyrics-overlay').style.display = 'none';
+    document.getElementById('progress-bar-wrap').style.display = 'none';
+    launchConfettiBurst();
+    return;
+  }
+
+  clearTimeout(slideTimer);
+  currentSlide = index;
+
+  document.querySelectorAll('.slide').forEach((s, i) => {
+    if (i === index) s.classList.add('active');
+    else s.classList.remove('active');
+  });
+
+  startProgress(SLIDE_DURATION);
+
+  slideTimer = setTimeout(() => {
+    if (!isPaused) showSlide(currentSlide + 1);
+  }, SLIDE_DURATION);
+}
+
+function nextSlide() {
+  clearTimeout(slideTimer);
+  const nextIdx = currentSlide + 1;
+  const a = getAudio();
+  if (a && nextIdx < totalSlides) {
+    a.currentTime = nextIdx * (SLIDE_DURATION / 1000);
+  }
+  showSlide(nextIdx);
+}
+
+function prevSlide() {
+  clearTimeout(slideTimer);
+  if (currentSlide > 0) {
+    const prevIdx = currentSlide - 1;
+    const a = getAudio();
+    if (a) {
+      a.currentTime = prevIdx * (SLIDE_DURATION / 1000);
+    }
+    showSlide(prevIdx);
+  }
+}
+
+function togglePause() {
+  isPaused = !isPaused;
+  const a = getAudio();
+  if (isPaused) {
+    clearTimeout(slideTimer);
+    if (a && !a.paused) a.pause();
+  } else {
+    showSlide(currentSlide);
+    if (a && a.paused) a.play().catch(e => console.log(e));
+  }
+}
+
+function startProgress(durationMs) {
+  const bar = document.getElementById('progress-bar');
+  bar.style.transition = 'none'; bar.style.width = '0%';
+  void bar.offsetWidth;
+  bar.style.transition = `width ${durationMs}ms linear`;
+  bar.style.width = '100%';
+}
+
+function startShow() {
+  document.getElementById('intro').classList.add('fade-out');
+  // Play song immediately within gesture context for mobile iOS/Android
+  const a = getAudio();
+  if (a) {
+    a.currentTime = 0;
+    a.play().catch(e => console.log('Audio gesture:', e));
+  }
+  setTimeout(() => {
+    document.getElementById('intro').style.display = 'none';
+    document.getElementById('slideshow').classList.add('active');
+    buildSlides();
+    showSlide(0);
+    spawnPetals();
+  }, 1200);
+}
+
+function replay() {
+  document.getElementById('final-screen').classList.remove('active');
+  document.getElementById('lyrics-overlay').style.display = 'block';
+  document.getElementById('progress-bar-wrap').style.display = 'block';
+  document.getElementById('slideshow').classList.add('active');
+  currentSlide = 0;
+  isPaused = false;
+  currentLyricIdx = -1;
+  buildSlides();
+  showSlide(0);
+  const a = getAudio();
+  if (a) {
+    a.currentTime = 0;
+    a.play().catch(e => console.log('Replay audio error:', e));
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  MOBILE TOUCH GESTURES (Tap / Swipe)
+// ════════════════════════════════════════════════════════
+let touchStartX = 0;
+let touchStartY = 0;
+const slideshowEl = document.getElementById('slideshow');
+
+slideshowEl.addEventListener('touchstart', e => {
+  touchStartX = e.changedTouches[0].clientX;
+  touchStartY = e.changedTouches[0].clientY;
+}, { passive: true });
+
+slideshowEl.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  
+  if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+    // Horizontal swipe
+    if (dx < 0) nextSlide();
+    else prevSlide();
+  } else if (Math.abs(dx) < 15 && Math.abs(dy) < 15) {
+    // Tap: Right 60% = next, Left 40% = previous
+    if (touchStartX > window.innerWidth * 0.4) nextSlide();
+    else prevSlide();
+  }
+}, { passive: true });
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+  else if (e.key === 'ArrowLeft') prevSlide();
+  else if (e.key === 'p' || e.key === 'P') togglePause();
+});
+
+// ════════════════════════════════════════════════════════
+//  STARFIELD CANVAS
+// ════════════════════════════════════════════════════════
+(function(){
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, stars=[], sparkles=[];
+  function resize(){ W=canvas.width=innerWidth; H=canvas.height=innerHeight; }
+  resize(); window.addEventListener('resize',resize);
+  for(let i=0;i<140;i++) stars.push({
+    x:Math.random()*W, y:Math.random()*H,
+    r:Math.random()*1.3+.3, a:Math.random(), da:(Math.random()-.5)*.012,
+    c:['#f5c842','#f28bbf','#ce93d8','#fff'][Math.floor(Math.random()*4)]
+  });
+  setInterval(()=>{
+    for(let i=0;i<2;i++) sparkles.push({
+      x:Math.random()*W, y:Math.random()*H,
+      r:Math.random()*2.2+.8, life:1,
+      vx:(Math.random()-.5)*.7, vy:-Math.random()*1.1-.3,
+      c:['#f5c842','#f28bbf','#ce93d8','#fff','#ffb347'][Math.floor(Math.random()*5)]
+    });
+  },140);
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s=>{
+      s.a+=s.da; if(s.a>1||s.a<0) s.da*=-1;
+      ctx.save(); ctx.globalAlpha=Math.max(0,s.a);
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=s.c; ctx.shadowBlur=5; ctx.shadowColor=s.c; ctx.fill(); ctx.restore();
+    });
+    sparkles=sparkles.filter(sp=>sp.life>0);
+    sparkles.forEach(sp=>{
+      sp.x+=sp.vx; sp.y+=sp.vy; sp.life-=.014;
+      ctx.save(); ctx.globalAlpha=sp.life; ctx.translate(sp.x,sp.y);
+      ctx.beginPath();
+      for(let i=0;i<4;i++){
+        ctx.lineTo(sp.r*Math.cos(i*Math.PI/2), sp.r*Math.sin(i*Math.PI/2));
+        ctx.lineTo(sp.r*.4*Math.cos(i*Math.PI/2+Math.PI/4), sp.r*.4*Math.sin(i*Math.PI/2+Math.PI/4));
+      }
+      ctx.closePath(); ctx.fillStyle=sp.c; ctx.shadowBlur=7; ctx.shadowColor=sp.c; ctx.fill(); ctx.restore();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ════════════════════════════════════════════════════════
+//  PETALS
+// ════════════════════════════════════════════════════════
+const PETALS = ['🌸','🌼','✨','🌺','💫','⭐','🌟','💖','🌷'];
+function spawnPetals(){
+  for(let i=0;i<12;i++) setTimeout(createPetal, i*400);
+  setInterval(createPetal, 1400);
+}
+function createPetal(){
+  const el = document.createElement('div');
+  el.className='petal';
+  el.textContent = PETALS[Math.floor(Math.random()*PETALS.length)];
+  el.style.left = Math.random()*100+'vw';
+  el.style.top = '-6vh';
+  el.style.fontSize = (Math.random()*1.3+.7)+'rem';
+  el.style.opacity = Math.random()*.5+.3;
+  const dur = Math.random()*7+7;
+  el.style.animationDuration = dur+'s';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), dur*1000);
+}
+
+// ════════════════════════════════════════════════════════
+//  CONFETTI BURST (final celebration screen)
+// ════════════════════════════════════════════════════════
+function launchConfettiBurst(){
+  const em=['🎊','🎉','✨','🌸','💛','🌟','🎂','💖','🎈','🌺'];
+  for(let i=0;i<45;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.style.cssText=`position:fixed;z-index:200;pointer-events:none;
+        font-size:${Math.random()*1.8+1}rem;left:${Math.random()*100}vw;top:-5vh;
+        animation:fall ${Math.random()*5+4}s linear forwards;`;
+      el.textContent=em[Math.floor(Math.random()*em.length)];
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),9000);
+    },i*80);
+  }
+}
+</script>
+</body>
+</html>
